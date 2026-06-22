@@ -1,0 +1,70 @@
+# .cursorrules — MIRA (Cursor reads this on every request)
+# Mirror of CLAUDE.md. If this and CLAUDE.md ever conflict, CLAUDE.md wins.
+
+PROJECT
+MIRA = a web app: student types a scenario -> rehearses a spoken conversation with a 3D
+virtual client (React Three Fiber) -> gets an AI communication coaching report.
+Rank-#1 hackathon target. Reliability and polish over feature count.
+
+PRIME DIRECTIVES (never violate)
+- Contracts before code: src/types.ts shapes are FROZEN. Don't change a shape unless told.
+- Walking skeleton first: whole flow must click on MOCK data before any real cloud call.
+- Everything mockable: every AWS/external call behind a service with Mock+Real, switched by USE_MOCKS.
+- Small diffs that always compile. Prefer editing over regenerating files. Never break the build.
+- No new npm dependencies without asking. When unsure, ASK — never invent APIs, params, or model names.
+
+STACK (pinned — do not substitute)
+- Next.js App Router + TypeScript strict + Tailwind + shadcn/ui. No other UI kit.
+- 3D: React Three Fiber + drei (not raw three.js in components).
+- VERSION PAIRING (prevents #1 install error):
+    React 19 / Next 15 -> @react-three/fiber@^9 + @react-three/drei@^10
+    React 18 / Next 14 -> @react-three/fiber@^8 + @react-three/drei@^9
+  Check the installed react version FIRST, then match the R3F/drei major. Let npm resolve three.
+- State: React hooks + a single useSession() context. No Redux/Zustand unless asked.
+
+ARCHITECTURE
+- Client never holds AWS keys or imports a service. Only app/api/* routes call services.
+- Each /api route accepts ?demo=1 -> returns a fixture from src/fixtures/ no matter what.
+- Wire real services priority: Bedrock -> Polly -> Transcribe. Comprehend/Rekognition last.
+- If a service is risky, keep it mocked and say so in UI/pitch. Never fake an AWS claim.
+
+GOING LIVE ON AWS (USE_MOCKS=false) — full runbook in docs/AWS_SETUP.md
+- Stack: Bedrock (@aws-sdk/client-bedrock-runtime) persona/dialogue/report; Polly
+  (@aws-sdk/client-polly) voice; Transcribe (optional) STT; S3 (optional) recordings. Region us-east-1.
+- Process: request Bedrock model access -> IAM user + key -> cp .env.example .env.local,
+  set keys + USE_MOCKS=false + BEDROCK_MODEL_ID -> npm i SDK -> implement real* stubs in services/* -> verify per tier.
+- lib/metrics.ts owns the numbers even in real mode; Claude writes only the prose.
+
+KNOWN GAP (top priority)
+- mockParseScenario ignores its input and always returns one persona. Build a KEYWORD ROUTER
+  (medical / IT-client / difficult-conversation -> distinct personas) so "scenario drives the
+  environment" is TRUE on mocks. Highest-value open task.
+
+THREE.JS / R3F (interactive AND safe)
+- Build the avatar PROCEDURALLY from primitives. NO external .gltf/.glb assets (zero load risk).
+- 3D files start with 'use client'; AvatarStage imported via dynamic(import, { ssr:false }). Three.js can't SSR.
+- One <Canvas> for the room: dpr={[1,2]}, shadows, camera position ~[0,1.4,4] fov 45.
+- Lighting encodes mood + adds polish: ambient + 1 directional (shadow) + colored rim
+    (anxious=amber, angry=red, sad=blue, neutral=teal).
+- Animate ONLY via useFrame: idle breathing always; stronger 'talk' motion gated by `speaking`.
+- Mood changes posture + material color. NO lip-sync (time-sink trap).
+- drei polish allowed: ContactShadows, Environment, Float (subtle), OrbitControls (no zoom/pan).
+- Frozen component contract: <AvatarStage persona mood speaking />. DOM (camera self-view, transcript) layers around the Canvas.
+- 3D only where it earns attention (the persona/room). Keep forms and the report as crisp DOM.
+
+CODE STYLE
+- strict TS, no any (use unknown + narrow). Components < ~150 lines, single responsibility.
+- Tailwind layout + shadcn primitives. Tokens: navy #1b2a3a, teal #0fb5ae, AWS orange #ff9900.
+- Keyboard-accessible, captions on by default, focus rings, loading/empty states everywhere.
+
+WORKFLOW (every task)
+1) Plan first: restate task, list files to touch, name the types. Wait for go.
+2) Implement the smallest slice that compiles. Don't touch unrelated files.
+3) Verify: build + typecheck; fix errors with the smallest change; screenshot UI changes.
+4) Report what changed + the next smallest step.
+- For lib/metrics.ts (talkRatio, fillers, wpm, open/closed) WRITE TESTS FIRST.
+
+ANTI-PATTERNS (do not do)
+- Regenerating whole working files. Changing a types.ts shape or API field name unasked.
+- External 3D models, lip-sync, or avatar polish before the Report screen works.
+- AWS SDK/keys in client components. Any change leaving npm run build failing.

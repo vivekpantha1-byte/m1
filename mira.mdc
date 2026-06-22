@@ -1,0 +1,20 @@
+---
+description: MIRA global build rules (always applied)
+globs:
+alwaysApply: true
+---
+
+# MIRA — always-on rules
+
+Cursor's modern rules format. This file is auto-applied to every request. The full detail
+lives in `CLAUDE.md` and `.cursorrules` at the repo root — read them. The essentials:
+
+- **Contracts before code.** `src/types.ts` shapes are FROZEN. Never change a shape unless told.
+- **Walking skeleton first** on MOCK data before any real cloud call.
+- **Everything mockable:** AWS behind services with Mock+Real, switched by `USE_MOCKS`; every `/api` route honors `?demo=1`.
+- **Stack is pinned:** Next.js + TS strict + Tailwind + shadcn/ui; 3D via React Three Fiber + drei.
+  - React 19/Next 15 → R3F `^9` + drei `^10`; React 18/Next 14 → R3F `^8` + drei `^9`. Match React major to R3F major.
+- **Three.js:** procedural avatar from primitives (NO external .gltf/.glb), `'use client'` + `dynamic(ssr:false)`,
+  animate via `useFrame`, mood = posture + light colour, **no lip-sync**.
+- **Small diffs that always compile.** No new deps without asking. Plan → implement one slice → verify → report.
+- When unsure, **ASK**. Never invent API params, model names, or libraries.
