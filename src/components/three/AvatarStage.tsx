@@ -5,6 +5,13 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Sparkles } from "@react-three/drei";
 import { VideoTexture, SRGBColorSpace, RepeatWrapping } from "three";
 import type { Mood, Persona } from "@/types";
+import {
+  AVATAR_LOOKS,
+  ROOM_THEMES,
+  lookFor,
+  themeFor,
+  type Archetype,
+} from "@/lib/archetype";
 import { Avatar } from "./Avatar";
 import { Room } from "./Room";
 
@@ -114,6 +121,8 @@ export function AvatarStage({
   assembling = false,
   wide = false,
   videoStream,
+  lookKey = null,
+  themeKey = null,
 }: {
   persona: Persona | null;
   mood: Mood;
@@ -121,8 +130,15 @@ export function AvatarStage({
   assembling?: boolean;
   wide?: boolean;
   videoStream?: MediaStream | null;
+  // Student overrides; null = auto-derive from the persona's archetype.
+  lookKey?: Archetype | null;
+  themeKey?: Archetype | null;
 }) {
   const hasStudent = videoStream != null;
+
+  // Scenario drives the look + environment by default; a student override wins.
+  const look = lookKey ? AVATAR_LOOKS[lookKey] : lookFor(persona);
+  const theme = themeKey ? ROOM_THEMES[themeKey] : themeFor(persona);
 
   // Face-to-face layout when the student is present; centred portrait otherwise.
   const camera = hasStudent
@@ -149,10 +165,10 @@ export function AvatarStage({
         );
       }}
     >
-      <color attach="background" args={["#e9e1d3"]} />
-      <fog attach="fog" args={["#e9e1d3", 9, 22]} />
+      <color attach="background" args={[theme.bg]} />
+      <fog attach="fog" args={[theme.bg, 9, 22]} />
 
-      <Room mood={mood} />
+      <Room mood={mood} theme={theme} />
 
       {assembling ? (
         <group position={[0, 0.9, 0]}>
@@ -163,11 +179,11 @@ export function AvatarStage({
         hasStudent ? (
           // Rehearsal: patient on the left, turned to face the student screen
           <group position={[-0.62, 0, 0.1]} rotation={[0, 0.5, 0]}>
-            <Avatar mood={mood} speaking={speaking} />
+            <Avatar mood={mood} speaking={speaking} look={look} />
           </group>
         ) : (
           // Scenario preview: patient centred, facing the viewer
-          <Avatar mood={mood} speaking={speaking} />
+          <Avatar mood={mood} speaking={speaking} look={look} />
         )
       ) : (
         <group position={[0, 0.9, 0]}>

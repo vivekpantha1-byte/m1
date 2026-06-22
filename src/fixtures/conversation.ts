@@ -1,4 +1,5 @@
 import type { Turn } from "@/types";
+import type { Archetype } from "@/lib/archetype";
 
 /**
  * Canned transcript for the mock path. tMs offsets are realistic (~150 wpm) so
@@ -65,3 +66,43 @@ export const mockTurns: Turn[] = [
     sentiment: 0.5,
   },
 ];
+
+/**
+ * In-character client lines per archetype, used by mockConverse so that even
+ * without live Bedrock (e.g. throttled), each scenario has its OWN dialogue that
+ * starts in its emotion and softens as the student builds rapport. Lines
+ * progress in order; the last is reused once exhausted.
+ */
+export const CONVERSATION_BY_ARCHETYPE: Record<Archetype, string[]> = {
+  medical: mockTurns.filter((t) => t.speaker === "client").map((t) => t.text),
+  pediatric: [
+    "Look, I've been waiting nearly an hour. He's been coughing all night — he needs antibiotics, not another 'wait and see'.",
+    "Viral? That's what they always say. My nephew had 'just a virus' and ended up in hospital.",
+    "...Okay. So what am I actually meant to watch for? I just don't want to get this wrong.",
+    "Alright. Thank you — honestly, that does make me feel a bit better about taking him home.",
+  ],
+  grief: [
+    "I just... I don't understand how we got here so fast. He was fine at Christmas.",
+    "If I agree to this — palliative care — am I giving up on him?",
+    "I keep thinking I should have noticed something was wrong sooner.",
+    "Thank you for sitting with me. I think... I think comfort is what he'd want.",
+  ],
+  "it-client": [
+    "Do you understand that three hundred staff didn't get paid this morning? This is on your team.",
+    "I don't want excuses, I want a timeline. When, exactly, is it fixed?",
+    "...Fine. And how do I know this won't happen again next pay run?",
+    "Okay. I appreciate you owning it. Let's lock in that follow-up and the prevention plan.",
+  ],
+  workplace: [
+    "I figured this was what the meeting was about. Look, I know a couple of deadlines have slipped.",
+    "It's not that I don't care about the work. There's just... a lot going on right now.",
+    "My mum's been really unwell. I didn't want to bring it in as an excuse.",
+    "Thanks for actually hearing me out. A lighter plan for the next sprint would genuinely help.",
+  ],
+  generic: [
+    "I'm not really sure where to start, to be honest.",
+    "It's a bit personal — I wasn't sure I'd even bring it up today.",
+    "...okay. It helps that you're not making me feel judged about it.",
+    "Thank you. I feel a bit lighter having actually said it out loud.",
+  ],
+};

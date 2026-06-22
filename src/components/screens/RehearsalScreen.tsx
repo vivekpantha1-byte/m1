@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { ConverseResult, Mood, Report, Turn } from "@/types";
 import { useSession } from "@/lib/useSession";
+import { useAppearance } from "@/lib/useAppearance";
 import { useCamera } from "@/lib/useCamera";
 import { useDictation } from "@/lib/useDictation";
 import { playAudio, speakText } from "@/lib/speak";
@@ -17,7 +18,7 @@ const AvatarStage = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-[#0d1b27]">
+      <div className="flex h-full w-full items-center justify-center bg-[#19102b]">
         <div className="shimmer h-24 w-24 rounded-full" />
       </div>
     ),
@@ -27,6 +28,7 @@ const AvatarStage = dynamic(
 export function RehearsalScreen() {
   const { persona, turns, addTurn, setReport, setRecordingUrl, goToStep } =
     useSession();
+  const { lookKey, themeKey } = useAppearance();
   const { videoRef, streamRef, stopRecording } = useCamera();
 
   const [mood, setMood] = useState<Mood>(persona?.avatarMood ?? "neutral");
@@ -61,6 +63,7 @@ export function RehearsalScreen() {
           body: JSON.stringify({
             turns: [...turns, studentTurn],
             studentText: text,
+            persona,
           }),
         });
         const data: ConverseResult = await res.json();
@@ -72,11 +75,13 @@ export function RehearsalScreen() {
           tMs: Date.now() - startedAt.current,
         });
         if (data.mood !== mood) {
+          const who =
+            persona?.role.split("—")[1]?.split(",")[0]?.trim() ?? "The client";
           const TOAST: Record<Mood, string> = {
-            neutral: "Margaret seems more at ease",
-            anxious: "Margaret is becoming more anxious",
-            angry:   "Margaret is getting frustrated",
-            sad:     "Margaret appears distressed",
+            neutral: `${who} seems more at ease`,
+            anxious: `${who} is becoming more anxious`,
+            angry:   `${who} is getting frustrated`,
+            sad:     `${who} appears distressed`,
           };
           setMoodToast(TOAST[data.mood]);
           setTimeout(() => setMoodToast(null), 3200);
@@ -93,7 +98,7 @@ export function RehearsalScreen() {
         setSpeaking(false);
       }
     },
-    [addTurn, turns, thinking, speaking, mood],
+    [addTurn, turns, thinking, speaking, mood, persona],
   );
 
   const { supported, listening, interim, start, stop } =
@@ -136,12 +141,14 @@ export function RehearsalScreen() {
     <div className="mx-auto grid w-full max-w-6xl flex-1 gap-4 px-6 py-6 lg:grid-cols-[2fr_1fr]">
       {/* Left: 3D stage — sticky so avatar never drifts when transcript grows */}
       <section className="sticky top-0 flex flex-col gap-4 self-start">
-        <div className="relative h-[60vh] overflow-hidden rounded-2xl bg-[#0d1b27] ring-1 ring-navy2/10">
+        <div className="relative h-[60vh] overflow-hidden rounded-2xl bg-[#19102b] ring-1 ring-navy2/10">
           <AvatarStage
             persona={persona}
             mood={mood}
             speaking={speaking}
             videoStream={streamRef.current}
+            lookKey={lookKey}
+            themeKey={themeKey}
           />
 
           {/* Persona name badge */}

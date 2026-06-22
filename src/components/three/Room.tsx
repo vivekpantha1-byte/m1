@@ -5,24 +5,22 @@ import { useFrame } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
 import type { PointLight } from "three";
 import type { Mood } from "@/types";
+import { MOOD_ACCENT, ROOM_THEMES, type RoomTheme } from "@/lib/archetype";
 
-const MOOD_ACCENT: Record<Mood, string> = {
-  anxious: "#ffd9a0",
-  angry:   "#ffb0a8",
-  sad:     "#aac4e8",
-  neutral: "#bfe8e4",
-};
-
-// ── Light, warm consultation office ───────────────────────────────────────────
-const WALL   = "#ece4d6";   // warm off-white
-const WALL_2 = "#e3d9c8";
-const FLOOR  = "#cdbb9e";   // light wood
-const WOOD   = "#a87f52";   // desk wood
-const WOOD_DK= "#8a6740";
-
-export function Room({ mood }: { mood: Mood }) {
+export function Room({
+  mood,
+  theme = ROOM_THEMES.medical,
+}: {
+  mood: Mood;
+  theme?: RoomTheme;
+}) {
   const accentRef = useRef<PointLight>(null);
   const accent = MOOD_ACCENT[mood];
+
+  // Per-archetype palette (walls, floor, accent) — the scene changes per scenario.
+  const WALL = theme.wall;
+  const WALL_2 = theme.wallDk;
+  const FLOOR = theme.floor;
 
   // Subtle mood-reactive accent (kept gentle so the room stays bright & calm)
   useFrame(({ clock }) => {
@@ -38,8 +36,8 @@ export function Room({ mood }: { mood: Mood }) {
 
   return (
     <>
-      {/* ── Bright, even lighting ────────────────────────────────────── */}
-      <ambientLight intensity={0.95} />
+      {/* ── Bright, even lighting (base level set by the theme) ───────── */}
+      <ambientLight intensity={theme.ambient} />
       <hemisphereLight args={["#fffaf0", "#d8cfc0", 0.9]} />
 
       {/* Key light (window daylight), casts soft shadow */}
@@ -127,9 +125,10 @@ export function Room({ mood }: { mood: Mood }) {
         <planeGeometry args={[0.9, 0.62]} />
         <meshStandardMaterial color="#ffffff" roughness={0.6} />
       </mesh>
+      {/* Framed wall art — tinted with the scenario's accent colour */}
       <mesh position={[1.6, 2.0, -2.56]}>
         <planeGeometry args={[0.78, 0.5]} />
-        <meshStandardMaterial color="#bcd8c8" roughness={0.7} />
+        <meshStandardMaterial color={theme.accent} roughness={0.7} />
       </mesh>
 
       {/* ── Wall clock ───────────────────────────────────────────────── */}

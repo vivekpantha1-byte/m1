@@ -1,6 +1,7 @@
 "use client";
 
 import { SessionProvider, useSession } from "@/lib/useSession";
+import { AppearanceProvider } from "@/lib/useAppearance";
 import { StepRail } from "@/components/ui/StepRail";
 import { ScenarioScreen } from "@/components/screens/ScenarioScreen";
 import { RehearsalScreen } from "@/components/screens/RehearsalScreen";
@@ -14,7 +15,7 @@ function AppBody() {
         <div className="flex items-center gap-2">
           <span className="text-lg font-bold tracking-tight text-navy">MIRA</span>
           <span className="rounded-full bg-orange/15 px-2 py-0.5 text-xs font-semibold text-orange">
-            mocks
+            AWS · Bedrock + Polly
           </span>
         </div>
         <StepRail current={step} />
@@ -32,7 +33,9 @@ function AppBody() {
 export function AppShell() {
   return (
     <SessionProvider>
-      <AppBody />
+      <AppearanceProvider>
+        <AppBody />
+      </AppearanceProvider>
     </SessionProvider>
   );
 }

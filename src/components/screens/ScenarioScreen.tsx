@@ -4,7 +4,9 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { Persona } from "@/types";
 import { useSession } from "@/lib/useSession";
+import { useAppearance } from "@/lib/useAppearance";
 import { PersonaCard } from "@/components/ui/PersonaCard";
+import { AppearancePicker } from "@/components/ui/AppearancePicker";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -13,15 +15,20 @@ const AvatarStage = dynamic(
   { ssr: false, loading: () => <StagePlaceholder /> },
 );
 
+// One per archetype so the keyword router visibly produces a different client,
+// avatar, and 3D environment for each (the "scenario drives the environment" rubric).
 const EXAMPLES = [
-  { icon: "🫀", label: "Cardiac anxiety",   text: "An anxious patient with chest pain who keeps insisting it's nothing." },
-  { icon: "💊", label: "Med resistance",    text: "An upset parent demanding antibiotics for their child's viral cold." },
-  { icon: "🕊️", label: "End-of-life",       text: "A grieving relative who wants to discuss end-of-life options." },
+  { icon: "🫀", label: "Cardiac anxiety", text: "An anxious patient with chest pain who keeps insisting it's nothing." },
+  { icon: "💊", label: "Med resistance",  text: "An upset parent demanding antibiotics for their child's viral cold." },
+  { icon: "🕊️", label: "End-of-life",     text: "A grieving relative who wants to discuss end-of-life care options for her husband." },
+  { icon: "💻", label: "IT escalation",   text: "An angry operations director escalating after a payroll system outage missed staff payments." },
+  { icon: "🤝", label: "Difficult 1:1",   text: "A one-to-one with a colleague about repeatedly missed deadlines on the team." },
 ];
 
 export function ScenarioScreen() {
   const { scenarioText, setScenarioText, persona, setPersona, goToStep } =
     useSession();
+  const { lookKey, themeKey } = useAppearance();
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
 
@@ -70,6 +77,7 @@ export function ScenarioScreen() {
         {persona ? (
           <div className="reveal flex flex-col gap-3">
             <PersonaCard persona={persona} />
+            <AppearancePicker />
             <Button
               onClick={() => goToStep(2)}
               className="w-full bg-navy py-5 text-sm font-semibold text-white hover:bg-navy2"
@@ -138,7 +146,7 @@ export function ScenarioScreen() {
       </aside>
 
       {/* ── RIGHT PANEL: full-height 3D stage (the hero) ────────────── */}
-      <div className="relative hidden flex-1 bg-[#0d1b27] lg:flex">
+      <div className="relative hidden flex-1 bg-[#19102b] lg:flex">
         <div className="absolute inset-0">
           <AvatarStage
             persona={persona}
@@ -146,6 +154,8 @@ export function ScenarioScreen() {
             speaking={false}
             assembling={loading}
             wide
+            lookKey={lookKey}
+            themeKey={themeKey}
           />
         </div>
 
@@ -178,7 +188,7 @@ export function ScenarioScreen() {
 
 function StagePlaceholder() {
   return (
-    <div className="flex h-full w-full items-center justify-center bg-[#0d1b27]">
+    <div className="flex h-full w-full items-center justify-center bg-[#19102b]">
       <div className="shimmer h-32 w-32 rounded-full" />
     </div>
   );

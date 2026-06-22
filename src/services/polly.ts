@@ -24,8 +24,30 @@ async function mockSynthesize(
 }
 
 async function realSynthesize(
-  _text: string,
-  _voiceId?: string,
+  text: string,
+  voiceId?: string,
 ): Promise<string | null> {
-  throw new Error("realSynthesize: Polly not wired yet");
+  try {
+    // Lazy import so mock mode never loads the AWS SDK.
+    const { PollyClient, SynthesizeSpeechCommand } = await import(
+      "@aws-sdk/client-polly"
+    );
+    const client = new PollyClient({ region: process.env.AWS_REGION });
+    const out = await client.send(
+      new SynthesizeSpeechCommand({
+        Text: text,
+        OutputFormat: "mp3",
+        Engine: "neural",
+        VoiceId: (voiceId ?? process.env.POLLY_VOICE_ID ?? "Joanna") as never,
+      }),
+    );
+    if (!out.AudioStream) return null;
+    const bytes = await out.AudioStream.transformToByteArray();
+    const b64 = Buffer.from(bytes).toString("base64");
+    // The client <Audio> already plays a data: URL via ConverseResult.audioUrl.
+    return `data:audio/mpeg;base64,${b64}`;
+  } catch {
+    // Any Polly failure → null so the client falls back to browser TTS.
+    return null;
+  }
 }

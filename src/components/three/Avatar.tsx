@@ -5,14 +5,9 @@ import { useFrame } from "@react-three/fiber";
 import type { Group, Mesh } from "three";
 import { MathUtils } from "three";
 import type { Mood } from "@/types";
+import { AVATAR_LOOKS, type AvatarLook } from "@/lib/archetype";
 
-// ─── Realistic material palette ───────────────────────────────────────────────
-const SKIN     = "#e3b48f";
-const SKIN_DK  = "#d49e76";
-const LIP      = "#c4756b";
-const HAIR     = "#9a8d7d";   // soft grey-brown (an older patient)
-const CARDIGAN = "#6f7f96";   // dusty blue knit
-const SHIRT    = "#ece6db";   // cream collar
+// Eye colour is shared across looks; skin/hair/clothing come from the AvatarLook.
 const EYE_IRIS = "#5b3a24";
 
 // ─── Per-mood expression + posture ────────────────────────────────────────────
@@ -33,7 +28,23 @@ const EXPRESSION: Record<
  * Soft PBR materials, articulated facial features (brows + mouth) that animate
  * per mood for readable emotion, idle breathing, and a speaking mouth.
  */
-export function Avatar({ mood, speaking }: { mood: Mood; speaking: boolean }) {
+export function Avatar({
+  mood,
+  speaking,
+  look = AVATAR_LOOKS.medical,
+}: {
+  mood: Mood;
+  speaking: boolean;
+  look?: AvatarLook;
+}) {
+  // Per-archetype palette (skin / hair / clothing) drives the whole figure.
+  const SKIN = look.skin;
+  const SKIN_DK = look.skinDk;
+  const LIP = look.lip;
+  const HAIR = look.hair;
+  const CARDIGAN = look.top;
+  const SHIRT = look.topAccent;
+
   const root      = useRef<Group>(null);
   const head      = useRef<Group>(null);
   const leftArm   = useRef<Group>(null);
@@ -130,20 +141,45 @@ export function Avatar({ mood, speaking }: { mood: Mood; speaking: boolean }) {
           <sphereGeometry args={[0.118, 24, 20]} />
           <meshStandardMaterial color={SKIN} roughness={0.62} />
         </mesh>
-        {/* Hair cap */}
-        <mesh position={[0, 0.028, -0.008]}>
-          <sphereGeometry args={[0.166, 28, 20, 0, Math.PI * 2, 0, Math.PI * 0.56]} />
-          <meshStandardMaterial color={HAIR} roughness={0.95} />
-        </mesh>
-        {/* Hair sides */}
-        <mesh position={[-0.13, -0.01, -0.02]}>
-          <sphereGeometry args={[0.055, 16, 16]} />
-          <meshStandardMaterial color={HAIR} roughness={0.95} />
-        </mesh>
-        <mesh position={[0.13, -0.01, -0.02]}>
-          <sphereGeometry args={[0.055, 16, 16]} />
-          <meshStandardMaterial color={HAIR} roughness={0.95} />
-        </mesh>
+        {/* Hair — style varies by archetype (bob / short / ponytail / bald) */}
+        {look.hairStyle !== "bald" && (
+          <mesh
+            position={[0, look.hairStyle === "short" ? 0.04 : 0.028, -0.008]}
+          >
+            <sphereGeometry
+              args={[
+                look.hairStyle === "short" ? 0.16 : 0.166,
+                28,
+                20,
+                0,
+                Math.PI * 2,
+                0,
+                look.hairStyle === "short" ? Math.PI * 0.46 : Math.PI * 0.56,
+              ]}
+            />
+            <meshStandardMaterial color={HAIR} roughness={0.95} />
+          </mesh>
+        )}
+        {/* Fuller side hair only for the bob */}
+        {look.hairStyle === "bob" && (
+          <>
+            <mesh position={[-0.13, -0.01, -0.02]}>
+              <sphereGeometry args={[0.055, 16, 16]} />
+              <meshStandardMaterial color={HAIR} roughness={0.95} />
+            </mesh>
+            <mesh position={[0.13, -0.01, -0.02]}>
+              <sphereGeometry args={[0.055, 16, 16]} />
+              <meshStandardMaterial color={HAIR} roughness={0.95} />
+            </mesh>
+          </>
+        )}
+        {/* Tied-back ponytail bun */}
+        {look.hairStyle === "ponytail" && (
+          <mesh position={[0, 0.02, -0.16]}>
+            <sphereGeometry args={[0.07, 16, 16]} />
+            <meshStandardMaterial color={HAIR} roughness={0.95} />
+          </mesh>
+        )}
 
         {/* Ears */}
         <mesh position={[-0.153, -0.005, 0.01]}>

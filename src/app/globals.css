@@ -9,13 +9,16 @@
    Tailwind utilities: bg-navy, text-teal, ring-orange, etc.
 ---------------------------------------------------------------------------- */
 @theme {
-  --color-navy: #1b2a3a;
-  --color-navy2: #22384c;
+  /* Brand primary = ACU purple (kept under the `navy` token names so every
+     existing bg-navy / text-navy usage rebrands at once). Teal stays as the
+     health/coaching accent; AWS orange stays for primary CTAs. */
+  --color-navy: #5a2d82;     /* ACU purple */
+  --color-navy2: #3d1a5b;    /* deeper purple (hovers / secondary) */
   --color-teal: #0fb5ae;
   --color-teal-dark: #0a8f89;
   --color-orange: #ff9900;
-  --color-paper: #f5f8fa;
-  --color-dim: #3f5568;
+  --color-paper: #f6f4f9;    /* faint lilac-tinted paper */
+  --color-dim: #4a3d59;      /* muted purple-grey body text */
 
   /* mood lighting hints (mirrored in the 3D rim light) */
   --color-mood-anxious: #ffb547;
